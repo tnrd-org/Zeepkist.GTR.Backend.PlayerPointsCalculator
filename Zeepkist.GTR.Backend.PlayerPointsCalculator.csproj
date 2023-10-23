@@ -18,6 +18,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.12"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.12"/>
         <PackageReference Include="Quartz.Extensions.Hosting" Version="3.7.0"/>
         <PackageReference Include="Serilog.AspNetCore" Version="7.0.0"/>
         <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3"/>
