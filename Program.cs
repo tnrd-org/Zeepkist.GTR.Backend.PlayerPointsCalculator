@@ -32,7 +32,7 @@ internal class Program
                             options
                                 .ForJob(CalculateJob.JobKey)
                                 .WithIdentity(CalculateJob.JobKey.Name + "-Trigger")
-                                .WithCronSchedule("0 0 0 ? * * *");
+                                .WithCronSchedule("0 0 * ? * * *");
                         });
                 });
 
