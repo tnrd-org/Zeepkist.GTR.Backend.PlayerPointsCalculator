@@ -42,7 +42,7 @@ public class CalculateJob : IJob
         {
             string level = group.Key;
             List<PersonalBest> personalBests = group
-                .OrderByDescending(x => x.RecordNavigation!.Time)
+                .OrderBy(x => x.RecordNavigation!.Time)
                 .ToList();
 
             for (int i = 0; i < personalBests.Count; i++)
