@@ -31,8 +31,15 @@ public class UpdateJob : IJob
             .AsNoTracking()
             .ToDictionaryAsync(x => x.User, y => y, context.CancellationToken);
 
-        foreach (KeyValuePair<int, int> kvp in userPoints)
+        List<KeyValuePair<int, int>> sortedPoints = userPoints
+            .OrderByDescending(x => x.Value)
+            .ToList();
+
+        for (int i = 0; i < sortedPoints.Count; i++)
         {
+            KeyValuePair<int, int> kvp = sortedPoints[i];
+            int rank = i + 1;
+
             if (playerToPlayerPoints.TryGetValue(kvp.Key, out PlayerPoints? existingPlayerPoints))
             {
                 if (existingPlayerPoints.Points == kvp.Value)
@@ -48,13 +55,15 @@ public class UpdateJob : IJob
 
                 EntityEntry<PlayerPoints> entry = db.PlayerPoints.Attach(existingPlayerPoints);
                 entry.Entity.Points = kvp.Value;
+                entry.Entity.Rank = rank;
             }
             else
             {
                 PlayerPoints newPlayerPoints = new()
                 {
                     User = kvp.Key,
-                    Points = kvp.Value
+                    Points = kvp.Value,
+                    Rank = rank
                 };
 
                 await db.PlayerPoints.AddAsync(newPlayerPoints, context.CancellationToken);
