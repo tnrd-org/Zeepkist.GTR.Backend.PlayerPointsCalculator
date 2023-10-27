@@ -41,6 +41,12 @@ public class CalculateJob : IJob
         foreach (IGrouping<string, PersonalBest> group in groups)
         {
             string level = group.Key;
+            if (!levelToPoints.TryGetValue(level, out int points))
+            {
+                logger.LogWarning("No points found for level {Level}", level);
+                continue;
+            }
+
             List<PersonalBest> personalBests = group
                 .OrderBy(x => x.RecordNavigation!.Time)
                 .ToList();
@@ -49,7 +55,7 @@ public class CalculateJob : IJob
             {
                 PersonalBest personalBest = personalBests[i];
                 int pointsForRankForLevel =
-                    (int)Math.Floor(CalculatePercentageYield(i + 1) * levelToPoints[level] / 100);
+                    (int)Math.Floor(CalculatePercentageYield(i + 1) * points / 100);
                 int user = personalBest.User;
                 userToPoints.TryAdd(user, 0);
                 userToPoints[user] += pointsForRankForLevel;
