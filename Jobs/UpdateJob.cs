@@ -42,15 +42,18 @@ public class UpdateJob : IJob
 
             if (playerToPlayerPoints.TryGetValue(kvp.Key, out PlayerPoints? existingPlayerPoints))
             {
-                if (existingPlayerPoints.Points == kvp.Value)
+                if (existingPlayerPoints.Points == kvp.Value && existingPlayerPoints.Rank == rank)
                 {
-                    logger.LogInformation("Skipping user {UserId} because points are the same", kvp.Key);
+                    logger.LogInformation("Skipping user {UserId} because points and rank are the same", kvp.Key);
                     continue;
                 }
 
-                logger.LogInformation("Updating points from {OldPoints} to {NewPoints} for user {UserId}",
+                logger.LogInformation(
+                    "Updating points from {OldPoints} to {NewPoints}, and rank from {OldRank} to {NewRank} for user {UserId}",
                     existingPlayerPoints.Points,
                     kvp.Value,
+                    existingPlayerPoints.Rank,
+                    rank,
                     kvp.Key);
 
                 EntityEntry<PlayerPoints> entry = db.PlayerPoints.Attach(existingPlayerPoints);
