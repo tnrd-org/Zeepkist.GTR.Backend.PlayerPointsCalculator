@@ -39,20 +39,33 @@ public class CalculatePlayerPointsJob : IJob
             }
         }
 
-        foreach (KeyValuePair<int, int> kvp in pointsPerPlayer)
-        {
-            PlayerPoints? playerPoints = await db.PlayerPoints.FirstOrDefaultAsync(x => x.User == kvp.Key);
+        List<PlayerPoints> playerPointsList = await db.PlayerPoints.ToListAsync(context.CancellationToken);
+        Dictionary<int, PlayerPoints> idToPlayerPoints = playerPointsList.ToDictionary(x => x.User);
 
-            if (playerPoints != null)
+        List<KeyValuePair<int, int>> orderedPoints = pointsPerPlayer.OrderByDescending(x => x.Value).ToList();
+        for (int i = 0; i < orderedPoints.Count; i++)
+        {
+            KeyValuePair<int, int> kvp = orderedPoints[i];
+            int newRank = i + 1;
+
+            if (idToPlayerPoints.TryGetValue(kvp.Key, out PlayerPoints? playerPoints))
             {
-                playerPoints.Points = kvp.Value;
+                if (playerPoints.Points != kvp.Value || playerPoints.Rank != newRank)
+                {
+                    playerPoints.Points = kvp.Value;
+                    playerPoints.Rank = newRank;
+                    playerPoints.DateUpdated = DateTime.UtcNow;
+                }
             }
             else
             {
                 playerPoints = new PlayerPoints
                 {
                     User = kvp.Key,
-                    Points = kvp.Value
+                    Points = kvp.Value,
+                    Rank = newRank,
+                    DateUpdated = DateTime.UtcNow,
+                    DateCreated = DateTime.UtcNow
                 };
 
                 db.PlayerPoints.Add(playerPoints);
