@@ -1,6 +1,5 @@
 using Quartz;
 using Serilog;
-using TNRD.Zeepkist.GTR.Backend.PlayerPointsCalculator.Jobs;
 using TNRD.Zeepkist.GTR.Database;
 
 namespace TNRD.Zeepkist.GTR.Backend.PlayerPointsCalculator;

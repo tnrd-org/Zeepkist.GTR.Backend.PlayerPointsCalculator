@@ -3,11 +3,23 @@ using Quartz;
 using TNRD.Zeepkist.GTR.Database;
 using TNRD.Zeepkist.GTR.Database.Models;
 
-namespace TNRD.Zeepkist.GTR.Backend.PlayerPointsCalculator.Jobs;
+namespace TNRD.Zeepkist.GTR.Backend.PlayerPointsCalculator;
 
 public class CalculatePlayerPointsJob : IJob
 {
     public static readonly JobKey JobKey = new(nameof(CalculatePlayerPointsJob));
+
+    private static Dictionary<int, double> fibbonus = new()
+    {
+        { 0, 0.21 },
+        { 1, 0.13 },
+        { 2, 0.08 },
+        { 3, 0.05 },
+        { 4, 0.03 },
+        { 5, 0.02 },
+        { 6, 0.01 },
+        { 7, 0.01 }
+    };
 
     private readonly GTRContext db;
 
@@ -18,6 +30,8 @@ public class CalculatePlayerPointsJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
+        int totalPlayers = await db.Users.AsNoTracking().CountAsync(context.CancellationToken);
+
         List<IGrouping<string, PersonalBest>> groups = await db.PersonalBests
             .AsNoTracking()
             .Include(x => x.RecordNavigation)
@@ -31,11 +45,19 @@ public class CalculatePlayerPointsJob : IJob
         {
             List<PersonalBest> personalBests = group.OrderBy(x => x.RecordNavigation!.Time).ToList();
 
+            int count = personalBests.Count;
+
             for (int i = 0; i < personalBests.Count; i++)
             {
+                int placementPoints = Math.Max(0, count - i);
+                double a = 1d / (totalPlayers / (double)count);
+                int b = i + 1;
+                double c = i < 8 ? fibbonus[i] : 0;
+                double points = placementPoints * (1 + a / b) + c;
+
                 PersonalBest personalBest = personalBests[i];
                 pointsPerPlayer.TryAdd(personalBest.User, 0);
-                pointsPerPlayer[personalBest.User] += Math.Max(0, group.Count() - i);
+                pointsPerPlayer[personalBest.User] += (int)Math.Round(points);
             }
         }
 
