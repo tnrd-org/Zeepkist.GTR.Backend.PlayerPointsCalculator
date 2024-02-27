@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Quartz;
 using TNRD.Zeepkist.GTR.Database;
 using TNRD.Zeepkist.GTR.Database.Models;
@@ -63,7 +64,7 @@ public class CalculatePlayerPointsJob : IJob
             }
         }
 
-        List<PlayerPoints> playerPointsList = await db.PlayerPoints.ToListAsync(context.CancellationToken);
+        List<PlayerPoints> playerPointsList = await db.PlayerPoints.AsTracking().ToListAsync(context.CancellationToken);
         Dictionary<int, PlayerPoints> idToPlayerPoints = playerPointsList.ToDictionary(x => x.User);
 
         List<KeyValuePair<int, int>> orderedPoints = pointsPerPlayer.OrderByDescending(x => x.Value).ToList();
@@ -72,24 +73,18 @@ public class CalculatePlayerPointsJob : IJob
             KeyValuePair<int, int> kvp = orderedPoints[i];
             int newRank = i + 1;
 
-            if (idToPlayerPoints.TryGetValue(kvp.Key, out PlayerPoints? playerPoints))
+            if (idToPlayerPoints.TryGetValue(kvp.Key, out PlayerPoints? existingPlayerPoints))
             {
-                if (playerPoints.Points != kvp.Value || playerPoints.Rank != newRank)
-                {
-                    playerPoints.Points = kvp.Value;
-                    playerPoints.Rank = newRank;
-                    playerPoints.DateUpdated = DateTime.UtcNow;
-                }
+                existingPlayerPoints.Points = kvp.Value;
+                existingPlayerPoints.Rank = newRank;
             }
             else
             {
-                playerPoints = new PlayerPoints
+                PlayerPoints playerPoints = new()
                 {
                     User = kvp.Key,
                     Points = kvp.Value,
-                    Rank = newRank,
-                    DateUpdated = DateTime.UtcNow,
-                    DateCreated = DateTime.UtcNow
+                    Rank = newRank
                 };
 
                 db.PlayerPoints.Add(playerPoints);
