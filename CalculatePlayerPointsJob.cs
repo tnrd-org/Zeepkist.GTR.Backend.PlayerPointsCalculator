@@ -22,10 +22,12 @@ public class CalculatePlayerPointsJob : IJob
     };
 
     private readonly GTRContext db;
+    private readonly ILogger<CalculatePlayerPointsJob> _logger;
 
-    public CalculatePlayerPointsJob(GTRContext db)
+    public CalculatePlayerPointsJob(GTRContext db, ILogger<CalculatePlayerPointsJob> logger)
     {
         this.db = db;
+        _logger = logger;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -94,6 +96,7 @@ public class CalculatePlayerPointsJob : IJob
             }
         }
 
-        await db.SaveChangesAsync(context.CancellationToken);
+        int saveChangesAsync = await db.SaveChangesAsync(context.CancellationToken);
+        _logger.LogInformation("Saved {Count} changes", saveChangesAsync);
     }
 }
