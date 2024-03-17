@@ -35,6 +35,13 @@ public class CalculatePlayerPointsJob : IJob
     {
         int totalPlayers = await db.Users.AsNoTracking().CountAsync(context.CancellationToken);
 
+        List<IGrouping<int, WorldRecord>> worldRecordGroups = await db.WorldRecords
+            .AsNoTracking()
+            .GroupBy(x => x.User)
+            .ToListAsync(context.CancellationToken);
+
+        Dictionary<int, int> worldRecordCountPerPlayer = worldRecordGroups.ToDictionary(x => x.Key, x => x.Count());
+
         List<IGrouping<string, PersonalBest>> groups = await db.PersonalBests
             .AsNoTracking()
             .Include(x => x.RecordNavigation)
@@ -77,6 +84,7 @@ public class CalculatePlayerPointsJob : IJob
             {
                 existingPlayerPoints.Points = kvp.Value;
                 existingPlayerPoints.Rank = newRank;
+                existingPlayerPoints.WorldRecords = worldRecordCountPerPlayer.GetValueOrDefault(kvp.Key, 0);
             }
             else
             {
@@ -84,7 +92,8 @@ public class CalculatePlayerPointsJob : IJob
                 {
                     User = kvp.Key,
                     Points = kvp.Value,
-                    Rank = newRank
+                    Rank = newRank,
+                    WorldRecords = worldRecordCountPerPlayer.GetValueOrDefault(kvp.Key, 0)
                 };
 
                 db.PlayerPoints.Add(playerPoints);
