@@ -30,7 +30,7 @@ internal class Program
                             options
                                 .ForJob(CalculatePlayerPointsJob.JobKey)
                                 .WithIdentity(CalculatePlayerPointsJob.JobKey.Name + "-Trigger")
-                                .WithCronSchedule("0 5/15 * ? * * *");
+                                .WithCronSchedule("0 0 0/6 ? * * *");
                         });
                 });
 
